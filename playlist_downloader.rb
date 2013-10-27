@@ -15,7 +15,7 @@ class PlaylistDownloader
   def self.download(list, dir, lyrics_dir, cover, imported)
     require 'fileutils'
 
-    songs = File.open(list).read.lines.select { |x| !x.strip.empty? }.map { |x| x.strip }.uniq
+    songs = File.open(list).read.lines.select { |x| !x.strip.empty? }.map { |x| x.strip }.uniq.reverse
     imp = File.open(imported).read.lines.select { |x| !x.strip.empty? }.map { |x| x.strip }
 
     FileUtils.rm_rf(dir)
@@ -51,6 +51,8 @@ class PlaylistDownloader
         imp += [s]
         File.open(imported, 'w').write(imp.join("\n"))
         puts "已将 #{filename} 导入 iTunes"
+
+        yield :imported, {id: s, filename: filename, info: info}
       end
     end
   end

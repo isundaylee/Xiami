@@ -1,0 +1,31 @@
+#!/usr/bin/env ruby
+# encoding: utf-8
+
+require 'daemons'
+require 'terminal-notifier'
+require 'filewatcher'
+require 'syslog'
+
+require_relative 'playlist_downloader'
+
+# Daemons.run_proc('xiami_daemon') do 
+  FileWatcher.new([File.join(File.dirname(__FILE__), "Playlist")]).watch do |filename|
+    def notify(message)
+      TerminalNotifier.notify(message, :title => 'Xiami Daemon', :activate => 'com.apple.iTunes')
+    end
+
+    notify "播放列表已更新。开始同步。"
+
+    PlaylistDownloader.download('Playlist', 'list', 'lyrics', 'resources/Favorites.png', 'Imported') do |event, i|
+      if event == :imported
+        notify "已将 #{i[:filename]} 导入 iTunes。"
+      end
+    end
+
+    notify "同步完成。"
+  end
+
+  loop do
+    sleep 10
+  end
+# end
