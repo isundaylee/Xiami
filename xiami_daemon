@@ -16,13 +16,17 @@ require_relative 'playlist_downloader'
 
     notify "播放列表已更新。开始同步。"
 
-    PlaylistDownloader.download('Playlist', 'list', 'lyrics', 'resources/Favorites.png', 'Imported') do |event, i|
+    result = PlaylistDownloader.download('Playlist', 'list', 'lyrics', 'resources/Favorites.png', 'Imported') do |event, i|
       if event == :imported
         notify "已将 #{i[:filename]} 导入 iTunes。"
       end
     end
 
-    notify "同步完成。"
+    if result
+      notify "同步完成。"
+    else
+      FileUtils.touch "/tmp/xiami_sync.trigger"
+    end
   end
 
   loop do
