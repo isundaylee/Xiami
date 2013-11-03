@@ -12,6 +12,20 @@ class PlaylistDownloader
     end
   end
 
+  def self.simplify_lyrics(l)
+    ls = l.lines.to_a
+    nls = []
+
+    ls.each do |ll|
+      unless ll =~ /\[[^0-9][^0-9]:.*?\]/
+        ll.gsub! /\[.*?\]/, ''
+        nls += [ll.strip]
+      end
+    end
+    
+    nls.join("\n")
+  end
+
   def self.download(list, dir, lyrics_dir, cover, imported)
     require 'fileutils'
 
@@ -66,7 +80,7 @@ class PlaylistDownloader
 
           path = File.join(dir, filename)
 
-          self.write_info(path, info, cover)
+          self.write_info(path, info, cover, simplify_lyrics(lyrics || ''))
 
           if imported && !imp.include?(s)
             self.import_to_itunes(path)
@@ -96,7 +110,7 @@ class PlaylistDownloader
     FileUtils.cp(path, itd)
   end
 
-  def self.write_info(file, info, cover)
+  def self.write_info(file, info, cover, lyrics = '')
     require 'taglib'
 
     TagLib::MPEG::File.open(file) do |f|
@@ -110,6 +124,13 @@ class PlaylistDownloader
       t = TagLib::ID3v2::TextIdentificationFrame.new('TCMP', TagLib::String::UTF8)
       t.text = '1'
       tag.add_frame(t)
+
+      unless lyrics.strip.empty? 
+        tag.remove_frames('USLT')
+        t = TagLib::ID3v2::UnsynchronizedLyricsFrame.new(TagLib::String::UTF8)
+        t.text = lyrics
+        tag.add_frame(t)
+      end
 
       apic = TagLib::ID3v2::AttachedPictureFrame.new
       apic.mime_type = 'image/png'
