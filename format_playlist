@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+
+songs = File.open('Playlist') { |f| f.lines.to_a }.select { |x| x.to_i > 0 }.map { |x| x.strip }.uniq
+
+File.open('Playlist', 'w') { |f| f.write songs.join("\n") + "\n" }
