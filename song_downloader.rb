@@ -18,6 +18,10 @@ class SongDownloader
   end
 
   def self.download_to_cache(url, filename, hidden = true)
+    require 'fileutils'
+
+    FileUtils.mkdir_p(File.expand_path(CACHE_DIR))
+
     ccp = File.join(File.expand_path(CACHE_DIR), filename + ".tmp")
     cfp = File.join(File.expand_path(CACHE_DIR), filename)
 
