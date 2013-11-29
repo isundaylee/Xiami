@@ -29,6 +29,10 @@ class PlaylistDownloader
   def self.download(list, dir, lyrics_dir, cover, imported)
     require 'fileutils'
 
+    `lock_acquire xiami_sync`
+
+    return false unless `lock_check xiami_sync`.strip == 'true'
+
     trigger_file = "/tmp/xiami_sync.trigger"
 
     loop do 
@@ -98,6 +102,8 @@ class PlaylistDownloader
 
       break unless File.exists?(trigger_file)
     end
+
+    `lock_release xiami_sync`
 
     return true
 
