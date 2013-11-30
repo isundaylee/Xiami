@@ -76,10 +76,10 @@ class PlaylistDownloader
           lyrics_fn = "#{self.combine_name(basename, counter)}.lrc"
           puts "正在下载 #{filename}"
           SongDownloader.download(s, dir, info, filename)
-          lyrics = SongDownloader.retrieve_lyrics(s, info)
+          lyrics = SongDownloader.retrieve_lyrics(s, info).force_encoding('utf-8')
 
           if !lyrics.strip.empty?
-            File.open(File.join(lyrics_dir, lyrics_fn), 'w:utf-8') { |f| f.write(lyrics) }
+            File.open(File.join(lyrics_dir, lyrics_fn), 'w') { |f| f.write(lyrics) }
           end
 
           path = File.join(dir, filename)
