@@ -38,7 +38,7 @@ class PlaylistDownloader
     loop do 
       FileUtils.rm(trigger_file) if File.exists?(trigger_file)
 
-      File.open("/tmp/xiami_sync.lock", 'w') do |lckf|
+      File.open("/tmp/xiami_sync.lock", 'w:utf-8') do |lckf|
 
         unless lckf.flock(File::LOCK_NB | File::LOCK_EX)
           puts "已有同步进程执行中。"
@@ -47,11 +47,11 @@ class PlaylistDownloader
 
         puts "开始同步"
 
-        songs = File.open(list) do |f|
+        songs = File.open(list, 'r:utf-8') do |f|
           f.read.lines.select { |x| !x.strip.empty? }.map { |x| x.strip }.uniq.reverse
         end
 
-        imp = File.open(imported) do |f|
+        imp = File.open(imported, 'r:utf-8') do |f|
           f.read.lines.select { |x| !x.strip.empty? }.map { |x| x.strip }
         end
 
@@ -79,7 +79,7 @@ class PlaylistDownloader
           lyrics = SongDownloader.retrieve_lyrics(s, info)
 
           if !lyrics.strip.empty?
-            File.open(File.join(lyrics_dir, lyrics_fn), 'w') { |f| f.write(lyrics) }
+            File.open(File.join(lyrics_dir, lyrics_fn), 'w:utf-8') { |f| f.write(lyrics) }
           end
 
           path = File.join(dir, filename)
@@ -89,7 +89,7 @@ class PlaylistDownloader
           if imported && !imp.include?(s)
             self.import_to_itunes(path)
             imp += [s]
-            File.open(imported, 'w') { |f| f.write(imp.join("\n")) }
+            File.open(imported, 'w:utf-8') { |f| f.write(imp.join("\n")) }
             puts "已将 #{filename} 导入 iTunes"
 
             yield :imported, {id: s, filename: filename, info: info} if block_given?
