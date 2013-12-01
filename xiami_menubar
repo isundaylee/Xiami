@@ -1,0 +1,75 @@
+#!/usr/bin/env ruby
+# encoding: utf-8
+
+framework "Cocoa"
+require 'thread'
+
+class XiamiMenubar
+
+	# We build the status bar item menu
+	def setup_menu
+	  menu = NSMenu.new
+	  menu.initWithTitle '虾米同步状态'
+
+	  mi = NSMenuItem.new
+	  mi.title = '退出'
+	  mi.action = 'quit:'
+	  mi.target = self
+	  menu.addItem mi
+
+	  menu
+	end
+
+	# Init the status bar
+	def init_status_bar(menu)
+	  status_bar = NSStatusBar.systemStatusBar
+	  status_item = status_bar.statusItemWithLength(NSVariableStatusItemLength)
+	  status_item.setMenu menu 
+	  status_item.setTitle "虾米同步状态"
+
+	  @status_item = status_item
+	end
+
+	def quit(sender)
+	  app = NSApplication.sharedApplication
+	  app.terminate(self)
+	end
+
+	def tn(name)
+		name = name.split('.')[0...-1].join('.')
+		name = name.split(' - ')[1..-1].join(' - ')
+	end
+
+	def initialize()
+		app = NSApplication.sharedApplication
+		init_status_bar(setup_menu)
+
+		Thread.new do |t|
+			while true
+				logs = `tail -n 3 ~/Library/Logs/xiami_daemon.log`.split("\n").map { |x| x.split("\r").last }
+
+				last = logs[2]
+
+				if last == '同步完成' || last == '开始同步'
+					@status_item.setTitle last
+				elsif /正在下载 (.*?)/.match(last)
+					@status_item.setTitle(tn(/正在下载 (.*?)$/.match(last)[1]) + ': 0.0%')
+				elsif /已将 (.*?) 导入 iTunes/.match(last)
+					@status_item.setTitle(tn(/已将 (.*?) 导入 iTunes/.match(last)[1]) + ': 100.0%')
+				elsif /#*?\w*?([0-9]*\.[0-9]*%)/.match(last)
+					second_last = logs[1]
+					song_name = tn(/正在下载 (.*?)$/.match(second_last)[1])
+					per = /#*?\w*?([0-9]*\.[0-9]*%)/.match(last)
+					@status_item.setTitle "#{song_name}: #{per}"
+				end
+
+				sleep 1
+			end
+		end
+
+		app.run
+	end
+
+end
+
+XiamiMenubar.new
