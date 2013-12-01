@@ -46,7 +46,9 @@ class XiamiMenubar
 
 		Thread.new do |t|
 			while true
-				logs = `tail -n 3 ~/Library/Logs/xiami_daemon.log`.split("\n").map { |x| x.split("\r").last }
+				logs_a = `tail -n 10 ~/Library/Logs/xiami_daemon.log`.split("\n").map { |x| x.split("\r").last }
+
+				logs = logs_a.select { |x| !/^ruby(.*?)/.match(x) } [-3..-1]
 
 				last = logs[2]
 
